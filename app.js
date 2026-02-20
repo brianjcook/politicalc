@@ -34,6 +34,7 @@
     reviewBackButton: document.getElementById("review-back-button"),
     showResultsButton: document.getElementById("show-results-button"),
     chartCanvas: document.getElementById("results-chart"),
+    resultsSummary: document.getElementById("results-summary"),
     resultsBody: document.getElementById("results-tbody"),
     retakeButton: document.getElementById("retake-button"),
     copyJsonButton: document.getElementById("copy-json-button"),
@@ -206,10 +207,22 @@
     return axes.map((axis) => {
       const max = 4 * axis.count;
       const percent = max > 0 ? Math.round((axis.raw / max) * 100) : 0;
+      const labelParts = axis.label.split(" vs ");
+      const highSide = labelParts.length === 2 ? labelParts[0].trim() : "higher-end positions";
+      const lowSide = labelParts.length === 2 ? labelParts[1].trim() : "lower-end positions";
+      const side = percent >= 50 ? highSide : lowSide;
+      const offset = Math.abs(percent - 50);
+      const strength = offset >= 35 ? "Strong" : offset >= 20 ? "Moderate" : "Slight";
+      const direction = percent === 50 ? "Balanced midpoint" : strength + " lean toward " + side;
+
       return {
         label: axis.label,
         percent: percent,
-        explanation: percent >= 50 ? axis.highMeans : axis.lowMeans
+        direction: direction,
+        highSide: highSide,
+        lowSide: lowSide,
+        highMeans: axis.highMeans,
+        lowMeans: axis.lowMeans
       };
     });
   }
@@ -240,16 +253,64 @@
       options: {
         responsive: true,
         maintainAspectRatio: true,
+        animation: {
+          duration: 1400,
+          easing: "easeOutQuart"
+        },
+        plugins: {
+          legend: {
+            labels: {
+              font: {
+                family: "interstate-mono"
+              }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => "Score: " + ctx.parsed.r + "%",
+              afterLabel: (ctx) => results[ctx.dataIndex].direction
+            }
+          }
+        },
         scales: {
           r: {
             min: 0,
             max: 100,
+            pointLabels: {
+              font: {
+                family: "interstate-mono",
+                size: 11
+              }
+            },
             ticks: {
               stepSize: 20
             }
           }
         }
       }
+    });
+
+    el.resultsSummary.innerHTML = "";
+    results.forEach((row) => {
+      const card = document.createElement("article");
+      card.className = "result-card";
+      card.style.setProperty("--score", String(row.percent));
+      card.title = "Low end: " + row.lowMeans + " | High end: " + row.highMeans;
+
+      const title = document.createElement("h3");
+      title.textContent = row.label + " (" + row.percent + "%)";
+
+      const meter = document.createElement("div");
+      meter.className = "result-meter";
+
+      const lean = document.createElement("p");
+      lean.className = "result-lean";
+      lean.textContent = row.direction;
+
+      card.appendChild(title);
+      card.appendChild(meter);
+      card.appendChild(lean);
+      el.resultsSummary.appendChild(card);
     });
 
     el.resultsBody.innerHTML = "";
@@ -263,7 +324,7 @@
       tdScore.textContent = row.percent + "%";
 
       const tdExp = document.createElement("td");
-      tdExp.textContent = row.explanation;
+      tdExp.textContent = row.direction;
 
       tr.appendChild(tdAxis);
       tr.appendChild(tdScore);
