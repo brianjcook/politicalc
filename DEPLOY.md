@@ -12,33 +12,26 @@ git remote add origin https://github.com/<your-user>/<your-repo>.git
 git push -u origin main
 ```
 
-## 2) Publish to your web server path
-Your site URL target implies this filesystem path pattern on the server:
-- `<web-root>/games/politicalc`
+## 2) GitHub Actions FTP auto-deploy setup
+A workflow file already exists at:
+- `.github/workflows/deploy.yml`
 
-Typical examples:
-- Apache cPanel: `public_html/games/politicalc`
-- Nginx server root: `/var/www/thecookblog.com/games/politicalc`
+In GitHub, set these repository secrets:
+1. `FTP_SERVER` -> FTP host (example: `ftp.thecookblog.com`)
+2. `FTP_USERNAME` -> FTP username
+3. `FTP_PASSWORD` -> FTP password
+4. `FTP_PROTOCOL` -> `ftp` or `ftps` (start with what your host documents)
+5. `FTP_PORT` -> usually `21` for FTP/explicit FTPS (sometimes `990` for implicit FTPS)
+6. `FTP_SERVER_DIR` -> remote path ending in slash, typically `/public_html/games/politicalc/`
 
-Deploy options:
-1. Clone the repo directly into that folder.
-2. Or pull updates into that folder from an existing clone.
+Once secrets are saved, every push to `main` deploys automatically.
+You can also run it manually from the `Actions` tab (`workflow_dispatch`).
 
-Example (server shell):
+## 3) One-time FTP folder check
+Make sure this folder exists (or allow action to create it):
+- `public_html/games/politicalc`
 
-```bash
-cd <web-root>/games
-git clone https://github.com/<your-user>/<your-repo>.git politicalc
-```
-
-For updates:
-
-```bash
-cd <web-root>/games/politicalc
-git pull origin main
-```
-
-## 3) Verify app URL
+## 4) Verify app URL
 Open:
 - `https://www.thecookblog.com/games/politicalc/`
 
@@ -47,8 +40,8 @@ Expected files served:
 - `styles.css`
 - `app.js`
 - `political-quiz-bank.json`
+- `.htaccess`
 
-## 4) Notes
+## 5) Notes
 - No backend is required for v1.
-- If your host blocks `.json` files, add a MIME type rule for `application/json`.
-- If your host is Apache and directory listing/indexing is customized, ensure `index.html` is allowed as default index.
+- `.htaccess` is included to force JSON MIME type and disable caching for `.html/.css/.js/.json` during updates.
