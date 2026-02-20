@@ -34,11 +34,12 @@
     reviewBackButton: document.getElementById("review-back-button"),
     showResultsButton: document.getElementById("show-results-button"),
     chartCanvas: document.getElementById("results-chart"),
+    personaName: document.getElementById("persona-name"),
+    personaSummary: document.getElementById("persona-summary"),
     resultsSummary: document.getElementById("results-summary"),
     resultsBody: document.getElementById("results-tbody"),
     retakeButton: document.getElementById("retake-button"),
-    copyJsonButton: document.getElementById("copy-json-button"),
-    downloadJsonButton: document.getElementById("download-json-button"),
+    downloadPdfButton: document.getElementById("download-pdf-button"),
     resultsFeedback: document.getElementById("results-feedback")
   };
 
@@ -175,6 +176,14 @@
     showView("review");
   }
 
+  function getAxisSideLabel(axisLabel, isHighSide) {
+    const parts = axisLabel.split(" vs ");
+    if (parts.length === 2) {
+      return isHighSide ? parts[0].trim() : parts[1].trim();
+    }
+    return isHighSide ? "High-end position" : "Low-end position";
+  }
+
   function calculateResults() {
     const axes = state.data.axes.map((axis) => ({
       id: axis.id,
@@ -207,9 +216,8 @@
     return axes.map((axis) => {
       const max = 4 * axis.count;
       const percent = max > 0 ? Math.round((axis.raw / max) * 100) : 0;
-      const labelParts = axis.label.split(" vs ");
-      const highSide = labelParts.length === 2 ? labelParts[0].trim() : "higher-end positions";
-      const lowSide = labelParts.length === 2 ? labelParts[1].trim() : "lower-end positions";
+      const highSide = getAxisSideLabel(axis.label, true);
+      const lowSide = getAxisSideLabel(axis.label, false);
       const side = percent >= 50 ? highSide : lowSide;
       const offset = Math.abs(percent - 50);
       const strength = offset >= 35 ? "Strong" : offset >= 20 ? "Moderate" : "Slight";
@@ -227,8 +235,84 @@
     });
   }
 
+  function generatePersona(results) {
+    const ranked = results
+      .map((r) => ({ ...r, distance: Math.abs(r.percent - 50) }))
+      .sort((a, b) => b.distance - a.distance);
+
+    const primary = ranked[0];
+    const secondary = ranked[1] || ranked[0];
+
+    function archetypeFromRow(row) {
+      const high = row.percent >= 50;
+      if (row.label.includes("Order vs Civil Liberties")) return high ? "Orderkeeper" : "Liberty Guard";
+      if (row.label.includes("Institutional Trust")) return high ? "Institutionalist" : "Skeptic";
+      if (row.label.includes("Economic Role of Government")) return high ? "Public Steward" : "Market Advocate";
+      if (row.label.includes("Pluralism vs Majoritarianism")) return high ? "Majoritarian" : "Pluralist";
+      if (row.label.includes("National Identity vs Cosmopolitanism")) return high ? "National Traditionalist" : "Civic Cosmopolitan";
+      if (row.label.includes("Populism")) return high ? "Populist Challenger" : "Technocratic Gradualist";
+      if (row.label.includes("Social & Cultural Traditionalism")) return high ? "Cultural Traditionalist" : "Social Liberal";
+      if (row.label.includes("Group Hierarchy vs Egalitarianism")) return high ? "Hierarchy Realist" : "Equality Advocate";
+      return high ? "High-Side Leaner" : "Low-Side Leaner";
+    }
+
+    const name = archetypeFromRow(primary) + " / " + archetypeFromRow(secondary);
+    const summary = "Strongest tilt: " + primary.direction + ". Secondary tilt: " + secondary.direction + ".";
+
+    return { name, summary };
+  }
+
+  async function exportResultsPdf() {
+    try {
+      el.resultsFeedback.textContent = "Building PDF...";
+
+      if (!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF) {
+        throw new Error("PDF libraries failed to load.");
+      }
+
+      const target = views.results;
+      const canvas = await window.html2canvas(target, {
+        scale: 2,
+        backgroundColor: "#ffffff"
+      });
+
+      const imageData = canvas.toDataURL("image/png");
+      const pdf = new window.jspdf.jsPDF("p", "pt", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 24;
+      const contentWidth = pageWidth - margin * 2;
+      const scaledHeight = (canvas.height * contentWidth) / canvas.width;
+
+      let heightLeft = scaledHeight;
+      let position = margin;
+
+      pdf.addImage(imageData, "PNG", margin, position, contentWidth, scaledHeight);
+      heightLeft -= pageHeight - margin * 2;
+
+      while (heightLeft > 0) {
+        position = margin - (scaledHeight - heightLeft);
+        pdf.addPage();
+        pdf.addImage(imageData, "PNG", margin, position, contentWidth, scaledHeight);
+        heightLeft -= pageHeight - margin * 2;
+      }
+
+      pdf.save("politicalc-results.pdf");
+      el.resultsFeedback.textContent = "Results PDF downloaded.";
+    } catch (err) {
+      el.resultsFeedback.textContent = "PDF export failed: " + err.message;
+    }
+  }
+
   function renderResults() {
     const results = calculateResults();
+    const rankedResults = results
+      .slice()
+      .sort((a, b) => Math.abs(b.percent - 50) - Math.abs(a.percent - 50));
+    const persona = generatePersona(results);
+
+    el.personaName.textContent = persona.name;
+    el.personaSummary.textContent = persona.summary;
 
     if (state.chart) {
       state.chart.destroy();
@@ -291,7 +375,7 @@
     });
 
     el.resultsSummary.innerHTML = "";
-    results.forEach((row) => {
+    rankedResults.forEach((row) => {
       const card = document.createElement("article");
       card.className = "result-card";
       card.style.setProperty("--score", String(row.percent));
@@ -303,18 +387,33 @@
       const meter = document.createElement("div");
       meter.className = "result-meter";
 
+      const ends = document.createElement("div");
+      ends.className = "result-ends";
+
+      const low = document.createElement("span");
+      low.className = "result-end-low";
+      low.textContent = "0%: " + row.lowSide;
+
+      const high = document.createElement("span");
+      high.className = "result-end-high";
+      high.textContent = "100%: " + row.highSide;
+
+      ends.appendChild(low);
+      ends.appendChild(high);
+
       const lean = document.createElement("p");
       lean.className = "result-lean";
       lean.textContent = row.direction;
 
       card.appendChild(title);
       card.appendChild(meter);
+      card.appendChild(ends);
       card.appendChild(lean);
       el.resultsSummary.appendChild(card);
     });
 
     el.resultsBody.innerHTML = "";
-    results.forEach((row) => {
+    rankedResults.forEach((row) => {
       const tr = document.createElement("tr");
 
       const tdAxis = document.createElement("td");
@@ -332,35 +431,7 @@
       el.resultsBody.appendChild(tr);
     });
 
-    el.copyJsonButton.onclick = () => {
-      const output = {};
-      results.forEach((row) => {
-        output[row.label] = row.percent;
-      });
-      const jsonText = JSON.stringify(output, null, 2);
-      navigator.clipboard.writeText(jsonText)
-        .then(() => {
-          el.resultsFeedback.textContent = "Results JSON copied to clipboard.";
-        })
-        .catch(() => {
-          el.resultsFeedback.textContent = "Clipboard copy failed.";
-        });
-    };
-
-    el.downloadJsonButton.onclick = () => {
-      const output = {};
-      results.forEach((row) => {
-        output[row.label] = row.percent;
-      });
-      const blob = new Blob([JSON.stringify(output, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "political-self-insight-results.json";
-      link.click();
-      URL.revokeObjectURL(url);
-      el.resultsFeedback.textContent = "Results JSON downloaded.";
-    };
+    el.downloadPdfButton.onclick = exportResultsPdf;
 
     showView("results");
   }
