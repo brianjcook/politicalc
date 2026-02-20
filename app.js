@@ -3,6 +3,64 @@
 
   const DATA_FILE = "political-quiz-bank.json";
   const STORAGE_KEY = "politicalc_quiz_state_v1";
+  const AXIS_COPY = {
+    econ: {
+      name: "Government Role in the Economy",
+      lowLabel: "Less government intervention",
+      highLabel: "More government intervention",
+      lowArchetype: "Market Advocate",
+      highArchetype: "Public Steward"
+    },
+    social: {
+      name: "Cultural Traditionalism",
+      lowLabel: "More socially liberal values",
+      highLabel: "More traditional social values",
+      lowArchetype: "Social Liberal",
+      highArchetype: "Cultural Traditionalist"
+    },
+    populism: {
+      name: "Populist Orientation",
+      lowLabel: "More expert-led governance",
+      highLabel: "More anti-elite populism",
+      lowArchetype: "Technocratic Gradualist",
+      highArchetype: "Populist Challenger"
+    },
+    order: {
+      name: "Public Order Priority",
+      lowLabel: "More civil-liberties priority",
+      highLabel: "More law-and-order priority",
+      lowArchetype: "Liberty Guard",
+      highArchetype: "Orderkeeper"
+    },
+    hierarchy: {
+      name: "Equality and Social Hierarchy",
+      lowLabel: "More egalitarian outlook",
+      highLabel: "More hierarchy-accepting outlook",
+      lowArchetype: "Equality Advocate",
+      highArchetype: "Hierarchy Realist"
+    },
+    institutions: {
+      name: "Institutional Confidence",
+      lowLabel: "Less institutional trust",
+      highLabel: "More institutional trust",
+      lowArchetype: "Institutional Skeptic",
+      highArchetype: "Institutionalist"
+    },
+    national: {
+      name: "National Identity Focus",
+      lowLabel: "More cosmopolitan identity",
+      highLabel: "More nationalist identity",
+      lowArchetype: "Civic Cosmopolitan",
+      highArchetype: "National Traditionalist"
+    },
+    pluralism: {
+      name: "Majority Rule Preference",
+      lowLabel: "More pluralist compromise",
+      highLabel: "More majoritarian decisiveness",
+      lowArchetype: "Pluralist",
+      highArchetype: "Majoritarian"
+    }
+  };
 
   const state = {
     data: null,
@@ -176,18 +234,23 @@
     showView("review");
   }
 
-  function getAxisSideLabel(axisLabel, isHighSide) {
-    const parts = axisLabel.split(" vs ");
-    if (parts.length === 2) {
-      return isHighSide ? parts[0].trim() : parts[1].trim();
-    }
-    return isHighSide ? "High-end position" : "Low-end position";
+  function getAxisCopy(axisId, fallbackLabel) {
+    const mapped = AXIS_COPY[axisId];
+    if (mapped) return mapped;
+    return {
+      name: fallbackLabel,
+      lowLabel: "Lower-end position",
+      highLabel: "Higher-end position",
+      lowArchetype: "Low-Side Leaner",
+      highArchetype: "High-Side Leaner"
+    };
   }
 
   function calculateResults() {
     const axes = state.data.axes.map((axis) => ({
       id: axis.id,
       label: axis.label,
+      copy: getAxisCopy(axis.id, axis.label),
       highMeans: axis.high_means,
       lowMeans: axis.low_means,
       raw: 0,
@@ -216,15 +279,17 @@
     return axes.map((axis) => {
       const max = 4 * axis.count;
       const percent = max > 0 ? Math.round((axis.raw / max) * 100) : 0;
-      const highSide = getAxisSideLabel(axis.label, true);
-      const lowSide = getAxisSideLabel(axis.label, false);
+      const highSide = axis.copy.highLabel;
+      const lowSide = axis.copy.lowLabel;
       const side = percent >= 50 ? highSide : lowSide;
       const offset = Math.abs(percent - 50);
       const strength = offset >= 35 ? "Strong" : offset >= 20 ? "Moderate" : "Slight";
       const direction = percent === 50 ? "Balanced midpoint" : strength + " lean toward " + side;
 
       return {
-        label: axis.label,
+        id: axis.id,
+        label: axis.copy.name,
+        originalLabel: axis.label,
         percent: percent,
         direction: direction,
         highSide: highSide,
@@ -244,16 +309,9 @@
     const secondary = ranked[1] || ranked[0];
 
     function archetypeFromRow(row) {
-      const high = row.percent >= 50;
-      if (row.label.includes("Order vs Civil Liberties")) return high ? "Orderkeeper" : "Liberty Guard";
-      if (row.label.includes("Institutional Trust")) return high ? "Institutionalist" : "Skeptic";
-      if (row.label.includes("Economic Role of Government")) return high ? "Public Steward" : "Market Advocate";
-      if (row.label.includes("Pluralism vs Majoritarianism")) return high ? "Majoritarian" : "Pluralist";
-      if (row.label.includes("National Identity vs Cosmopolitanism")) return high ? "National Traditionalist" : "Civic Cosmopolitan";
-      if (row.label.includes("Populism")) return high ? "Populist Challenger" : "Technocratic Gradualist";
-      if (row.label.includes("Social & Cultural Traditionalism")) return high ? "Cultural Traditionalist" : "Social Liberal";
-      if (row.label.includes("Group Hierarchy vs Egalitarianism")) return high ? "Hierarchy Realist" : "Equality Advocate";
-      return high ? "High-Side Leaner" : "Low-Side Leaner";
+      const copy = AXIS_COPY[row.id];
+      if (!copy) return row.percent >= 50 ? "High-Side Leaner" : "Low-Side Leaner";
+      return row.percent >= 50 ? copy.highArchetype : copy.lowArchetype;
     }
 
     const name = archetypeFromRow(primary) + " / " + archetypeFromRow(secondary);
