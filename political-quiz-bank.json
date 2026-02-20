@@ -1,0 +1,329 @@
+{
+  "meta": {
+    "id": "us_political_self_insight_v1",
+    "title": "US Political Self-Insight (8-axis) Question Bank",
+    "intended_duration_minutes": "5\u201310",
+    "questions_count": 32,
+    "likert_points": 5,
+    "created_utc": "2026-02-20T15:58:07Z",
+    "notes": [
+      "US-only self-insight instrument designed for a one-page HTML/CSS/JS app.",
+      "Each axis has 4 items. Some items are reverse-scored (reverse=true).",
+      "Scores can be displayed as a radar/pizza chart (8 axes)."
+    ]
+  },
+  "axes": [
+    {
+      "id": "econ",
+      "label": "Economic Role of Government",
+      "high_means": "More pro-redistribution / pro-regulation",
+      "low_means": "More free-market / anti-welfare / anti-regulation"
+    },
+    {
+      "id": "social",
+      "label": "Social & Cultural Traditionalism",
+      "high_means": "More traditionalist / religion & tradition oriented",
+      "low_means": "More socially liberal / autonomy oriented"
+    },
+    {
+      "id": "populism",
+      "label": "Populism (Anti-Elite Orientation)",
+      "high_means": "More anti-elite / majoritarian / disruption oriented",
+      "low_means": "More technocratic / pluralist / expert-deference oriented"
+    },
+    {
+      "id": "order",
+      "label": "Order vs Civil Liberties",
+      "high_means": "More order/punitive/security oriented",
+      "low_means": "More civil-libertarian / speech-protective / anti-surveillance"
+    },
+    {
+      "id": "hierarchy",
+      "label": "Group Hierarchy vs Egalitarianism",
+      "high_means": "More hierarchy / group inequality tolerant",
+      "low_means": "More egalitarian / equality of influence oriented"
+    },
+    {
+      "id": "institutions",
+      "label": "Institutional Trust",
+      "high_means": "More trust/legitimacy for institutions",
+      "low_means": "More distrust / rebuild-from-scratch orientation"
+    },
+    {
+      "id": "national",
+      "label": "National Identity vs Cosmopolitanism",
+      "high_means": "More nationalist / cultural preservation / sovereignty oriented",
+      "low_means": "More cosmopolitan / alliance-friendly / ideals-based identity"
+    },
+    {
+      "id": "pluralism",
+      "label": "Pluralism vs Majoritarianism",
+      "high_means": "More majoritarian / decisive action / anti-compromise",
+      "low_means": "More pluralist / minority-rights / pro-deliberation"
+    }
+  ],
+  "response_sets": {
+    "likert5": [
+      {
+        "value": 1,
+        "label": "Strongly disagree"
+      },
+      {
+        "value": 2,
+        "label": "Disagree"
+      },
+      {
+        "value": 3,
+        "label": "Neither agree nor disagree"
+      },
+      {
+        "value": 4,
+        "label": "Agree"
+      },
+      {
+        "value": 5,
+        "label": "Strongly agree"
+      }
+    ]
+  },
+  "questions": [
+    {
+      "id": "Q1",
+      "axis": "econ",
+      "reverse": false,
+      "response_set": "likert5",
+      "text": "The federal government should play a strong role in reducing income inequality."
+    },
+    {
+      "id": "Q2",
+      "axis": "econ",
+      "reverse": true,
+      "response_set": "likert5",
+      "text": "Free markets, left mostly on their own, produce the best outcomes for society."
+    },
+    {
+      "id": "Q3",
+      "axis": "econ",
+      "reverse": false,
+      "response_set": "likert5",
+      "text": "Large corporations should be more tightly regulated, even if that slows economic growth."
+    },
+    {
+      "id": "Q4",
+      "axis": "econ",
+      "reverse": true,
+      "response_set": "likert5",
+      "text": "Government welfare programs usually do more harm than good."
+    },
+    {
+      "id": "Q5",
+      "axis": "social",
+      "reverse": false,
+      "response_set": "likert5",
+      "text": "Traditional social values should be upheld, even if society is changing."
+    },
+    {
+      "id": "Q6",
+      "axis": "social",
+      "reverse": true,
+      "response_set": "likert5",
+      "text": "Society benefits when people challenge long-standing moral traditions."
+    },
+    {
+      "id": "Q7",
+      "axis": "social",
+      "reverse": false,
+      "response_set": "likert5",
+      "text": "Religion should have a greater influence in public life."
+    },
+    {
+      "id": "Q8",
+      "axis": "social",
+      "reverse": true,
+      "response_set": "likert5",
+      "text": "Government should stay completely neutral on questions of morality."
+    },
+    {
+      "id": "Q9",
+      "axis": "populism",
+      "reverse": false,
+      "response_set": "likert5",
+      "text": "Elected officials in Washington mostly serve powerful interests rather than ordinary people."
+    },
+    {
+      "id": "Q10",
+      "axis": "populism",
+      "reverse": false,
+      "response_set": "likert5",
+      "text": "The will of the majority should not be blocked by courts or bureaucrats."
+    },
+    {
+      "id": "Q11",
+      "axis": "populism",
+      "reverse": true,
+      "response_set": "likert5",
+      "text": "Complex problems are best handled by experts, even if ordinary citizens disagree."
+    },
+    {
+      "id": "Q12",
+      "axis": "populism",
+      "reverse": false,
+      "response_set": "likert5",
+      "text": "The country needs leaders who are willing to disrupt the political establishment."
+    },
+    {
+      "id": "Q13",
+      "axis": "order",
+      "reverse": false,
+      "response_set": "likert5",
+      "text": "Maintaining law and order is more important than protecting individual civil liberties."
+    },
+    {
+      "id": "Q14",
+      "axis": "order",
+      "reverse": true,
+      "response_set": "likert5",
+      "text": "Even offensive or controversial speech should be legally protected."
+    },
+    {
+      "id": "Q15",
+      "axis": "order",
+      "reverse": false,
+      "response_set": "likert5",
+      "text": "Police should be given broader powers to prevent crime."
+    },
+    {
+      "id": "Q16",
+      "axis": "order",
+      "reverse": true,
+      "response_set": "likert5",
+      "text": "Government surveillance often goes too far in limiting personal freedom."
+    },
+    {
+      "id": "Q17",
+      "axis": "hierarchy",
+      "reverse": false,
+      "response_set": "likert5",
+      "text": "Some groups of people are naturally more capable of leadership than others."
+    },
+    {
+      "id": "Q18",
+      "axis": "hierarchy",
+      "reverse": true,
+      "response_set": "likert5",
+      "text": "Society works best when all groups have roughly equal influence."
+    },
+    {
+      "id": "Q19",
+      "axis": "hierarchy",
+      "reverse": false,
+      "response_set": "likert5",
+      "text": "Efforts to equalize outcomes between groups often go too far."
+    },
+    {
+      "id": "Q20",
+      "axis": "hierarchy",
+      "reverse": true,
+      "response_set": "likert5",
+      "text": "Government should actively work to reduce disparities between racial and social groups."
+    },
+    {
+      "id": "Q21",
+      "axis": "institutions",
+      "reverse": false,
+      "response_set": "likert5",
+      "text": "Most major American institutions (courts, elections, universities) are fundamentally legitimate."
+    },
+    {
+      "id": "Q22",
+      "axis": "institutions",
+      "reverse": true,
+      "response_set": "likert5",
+      "text": "The federal government is so broken that it needs to be rebuilt from scratch."
+    },
+    {
+      "id": "Q23",
+      "axis": "institutions",
+      "reverse": false,
+      "response_set": "likert5",
+      "text": "Career civil servants generally act in the public interest."
+    },
+    {
+      "id": "Q24",
+      "axis": "institutions",
+      "reverse": true,
+      "response_set": "likert5",
+      "text": "National media organizations are intentionally misleading the public."
+    },
+    {
+      "id": "Q25",
+      "axis": "national",
+      "reverse": false,
+      "response_set": "likert5",
+      "text": "Immigration levels should be reduced to preserve American culture."
+    },
+    {
+      "id": "Q26",
+      "axis": "national",
+      "reverse": true,
+      "response_set": "likert5",
+      "text": "The U.S. benefits greatly from being deeply involved in international institutions and alliances."
+    },
+    {
+      "id": "Q27",
+      "axis": "national",
+      "reverse": false,
+      "response_set": "likert5",
+      "text": "American identity is defined primarily by shared traditions rather than shared ideals."
+    },
+    {
+      "id": "Q28",
+      "axis": "national",
+      "reverse": true,
+      "response_set": "likert5",
+      "text": "Being American is mainly about commitment to democratic principles, not cultural background."
+    },
+    {
+      "id": "Q29",
+      "axis": "pluralism",
+      "reverse": true,
+      "response_set": "likert5",
+      "text": "Democracy requires protecting minority rights, even when the majority disagrees."
+    },
+    {
+      "id": "Q30",
+      "axis": "pluralism",
+      "reverse": false,
+      "response_set": "likert5",
+      "text": "Too much compromise in politics prevents the country from making real progress."
+    },
+    {
+      "id": "Q31",
+      "axis": "pluralism",
+      "reverse": false,
+      "response_set": "likert5",
+      "text": "The country would function better if leaders acted decisively instead of negotiating."
+    },
+    {
+      "id": "Q32",
+      "axis": "pluralism",
+      "reverse": true,
+      "response_set": "likert5",
+      "text": "A healthy democracy depends on many competing viewpoints."
+    }
+  ],
+  "scoring": {
+    "per_question": {
+      "input": "Likert value 1..5",
+      "to_0_4": "n = value - 1",
+      "reverse_if_needed": "if reverse: n = 4 - n"
+    },
+    "per_axis": {
+      "axis_raw": "sum(n for questions in axis)",
+      "axis_max": "4 * number_of_questions_in_axis",
+      "axis_0_1": "axis_raw / axis_max",
+      "axis_0_100": "round(axis_0_1 * 100)"
+    },
+    "interpretation": "Higher values indicate more endorsement of the axis label (see axes[].high_means)."
+  }
+}

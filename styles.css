@@ -1,0 +1,205 @@
+:root {
+  --bg: #f4f1e6;
+  --panel: #fffdf7;
+  --text: #1d2a2a;
+  --muted: #4a5758;
+  --accent: #0f766e;
+  --accent-2: #125a8f;
+  --border: #c8d4d5;
+  --focus: #d9480f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, Verdana, sans-serif;
+  background:
+    radial-gradient(circle at 15% 15%, #dceef5 0%, rgba(220, 238, 245, 0) 35%),
+    radial-gradient(circle at 85% 5%, #f1ead4 0%, rgba(241, 234, 212, 0) 30%),
+    var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.app-shell {
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 1.25rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(18, 34, 34, 0.12);
+}
+
+.app-header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+h1 {
+  margin: 0 0 0.4rem;
+  font-size: 1.85rem;
+  color: var(--accent-2);
+}
+
+h2 {
+  margin: 0.4rem 0 0.8rem;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--muted);
+}
+
+.view {
+  margin-top: 1rem;
+}
+
+.hidden {
+  display: none;
+}
+
+.question-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.progress {
+  font-weight: 600;
+  margin: 0;
+}
+
+.answers-form {
+  display: grid;
+  gap: 0.7rem;
+  margin: 1rem 0 1.25rem;
+}
+
+.answer-option {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.7rem 0.8rem;
+  background: #ffffff;
+}
+
+.answer-option:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 0.62rem 1rem;
+  font-weight: 600;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #fff;
+  color: var(--accent-2);
+  border: 1px solid var(--accent-2);
+}
+
+button[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.review-list {
+  padding-left: 1.25rem;
+}
+
+.review-item {
+  margin: 0 0 0.8rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.review-question {
+  margin: 0 0 0.35rem;
+}
+
+.review-answer {
+  margin: 0 0 0.45rem;
+  color: var(--muted);
+}
+
+.inline-button {
+  background: transparent;
+  color: var(--accent-2);
+  text-decoration: underline;
+  padding: 0;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  padding: 0.65rem 0.55rem;
+  vertical-align: top;
+}
+
+.feedback {
+  min-height: 1.4rem;
+  font-weight: 600;
+  color: var(--accent-2);
+}
+
+@media (max-width: 680px) {
+  .app-shell {
+    margin: 0.75rem;
+    padding: 0.9rem;
+  }
+
+  h1 {
+    font-size: 1.45rem;
+  }
+
+  .question-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  button {
+    width: 100%;
+  }
+
+  .button-row {
+    width: 100%;
+  }
+}

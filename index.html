@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>US Political Self-Insight Quiz</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <main id="app" class="app-shell">
+    <header class="app-header">
+      <h1>US Political Self-Insight Quiz</h1>
+      <p class="subtitle">32 questions, 8 dimensions, neutral self-insight output.</p>
+    </header>
+
+    <section id="view-error" class="view hidden" aria-live="assertive">
+      <h2>Unable to Load Quiz</h2>
+      <p id="error-message">Something went wrong while loading quiz data.</p>
+      <button id="retry-button" type="button">Retry</button>
+    </section>
+
+    <section id="view-start" class="view hidden">
+      <h2>Start</h2>
+      <p>This quiz is for self-insight and is not a diagnosis or party matcher.</p>
+      <div class="button-row">
+        <button id="start-button" type="button">Start Quiz</button>
+        <button id="resume-button" type="button" class="secondary hidden">Resume Progress</button>
+      </div>
+    </section>
+
+    <section id="view-question" class="view hidden" aria-live="polite">
+      <div class="question-head">
+        <p id="progress-text" class="progress">Question 1 of 32</p>
+        <button id="start-over-button" type="button" class="secondary">Start over</button>
+      </div>
+      <h2 id="question-text"></h2>
+      <form id="answers-form" class="answers-form"></form>
+      <div class="button-row">
+        <button id="back-button" type="button" class="secondary">Back</button>
+        <button id="next-button" type="button">Next</button>
+      </div>
+    </section>
+
+    <section id="view-review" class="view hidden">
+      <h2>Review Answers</h2>
+      <p>Jump to any question to edit, then view your results.</p>
+      <ol id="review-list" class="review-list"></ol>
+      <div class="button-row">
+        <button id="review-back-button" type="button" class="secondary">Back to Quiz</button>
+        <button id="show-results-button" type="button">Show Results</button>
+      </div>
+    </section>
+
+    <section id="view-results" class="view hidden">
+      <h2>Your Results</h2>
+      <canvas id="results-chart" width="700" height="700" aria-label="Radar chart of axis scores"></canvas>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Axis</th>
+              <th>Score</th>
+              <th>Interpretation</th>
+            </tr>
+          </thead>
+          <tbody id="results-tbody"></tbody>
+        </table>
+      </div>
+      <div class="button-row">
+        <button id="retake-button" type="button">Retake quiz</button>
+        <button id="copy-json-button" type="button" class="secondary">Copy results JSON</button>
+        <button id="download-json-button" type="button" class="secondary">Download results</button>
+      </div>
+      <p id="results-feedback" class="feedback" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

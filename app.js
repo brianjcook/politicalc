@@ -1,0 +1,402 @@
+(function () {
+  "use strict";
+
+  const DATA_FILE = "political-quiz-bank.json";
+  const STORAGE_KEY = "politicalc_quiz_state_v1";
+
+  const state = {
+    data: null,
+    answers: [],
+    currentIndex: 0,
+    chart: null
+  };
+
+  const views = {
+    error: document.getElementById("view-error"),
+    start: document.getElementById("view-start"),
+    question: document.getElementById("view-question"),
+    review: document.getElementById("view-review"),
+    results: document.getElementById("view-results")
+  };
+
+  const el = {
+    errorMessage: document.getElementById("error-message"),
+    retryButton: document.getElementById("retry-button"),
+    startButton: document.getElementById("start-button"),
+    resumeButton: document.getElementById("resume-button"),
+    startOverButton: document.getElementById("start-over-button"),
+    progressText: document.getElementById("progress-text"),
+    questionText: document.getElementById("question-text"),
+    answersForm: document.getElementById("answers-form"),
+    backButton: document.getElementById("back-button"),
+    nextButton: document.getElementById("next-button"),
+    reviewList: document.getElementById("review-list"),
+    reviewBackButton: document.getElementById("review-back-button"),
+    showResultsButton: document.getElementById("show-results-button"),
+    chartCanvas: document.getElementById("results-chart"),
+    resultsBody: document.getElementById("results-tbody"),
+    retakeButton: document.getElementById("retake-button"),
+    copyJsonButton: document.getElementById("copy-json-button"),
+    downloadJsonButton: document.getElementById("download-json-button"),
+    resultsFeedback: document.getElementById("results-feedback")
+  };
+
+  function showView(name) {
+    Object.keys(views).forEach((key) => {
+      views[key].classList.toggle("hidden", key !== name);
+    });
+  }
+
+  function getLikertLabel(value) {
+    const likert = state.data.response_sets.likert5;
+    const match = likert.find((item) => item.value === value);
+    return match ? match.label : "No answer";
+  }
+
+  function saveProgress() {
+    const payload = {
+      answers: state.answers,
+      currentIndex: state.currentIndex
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  }
+
+  function loadProgress() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+
+      const saved = JSON.parse(raw);
+      const questionCount = state.data.questions.length;
+
+      if (!Array.isArray(saved.answers) || saved.answers.length !== questionCount) {
+        return false;
+      }
+
+      state.answers = saved.answers.map((v) => {
+        if (v === null) return null;
+        const n = Number(v);
+        return Number.isInteger(n) && n >= 1 && n <= 5 ? n : null;
+      });
+
+      state.currentIndex = Number.isInteger(saved.currentIndex)
+        ? Math.max(0, Math.min(saved.currentIndex, questionCount - 1))
+        : 0;
+
+      return state.answers.some((v) => v !== null);
+    } catch (_err) {
+      return false;
+    }
+  }
+
+  function clearProgress() {
+    state.answers = new Array(state.data.questions.length).fill(null);
+    state.currentIndex = 0;
+    localStorage.removeItem(STORAGE_KEY);
+  }
+
+  function firstUnansweredIndex() {
+    const idx = state.answers.findIndex((v) => v === null);
+    return idx === -1 ? state.answers.length - 1 : idx;
+  }
+
+  function renderQuestion() {
+    const questions = state.data.questions;
+    const question = questions[state.currentIndex];
+    const selected = state.answers[state.currentIndex];
+    const likert = state.data.response_sets.likert5;
+
+    el.progressText.textContent = "Question " + (state.currentIndex + 1) + " of " + questions.length;
+    el.questionText.textContent = question.text;
+    el.answersForm.innerHTML = "";
+
+    likert.forEach((option) => {
+      const wrapper = document.createElement("label");
+      wrapper.className = "answer-option";
+
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = "answer";
+      input.value = String(option.value);
+      input.checked = selected === option.value;
+      input.addEventListener("change", () => {
+        state.answers[state.currentIndex] = option.value;
+        saveProgress();
+        el.nextButton.disabled = false;
+      });
+
+      const text = document.createElement("span");
+      text.textContent = option.label;
+
+      wrapper.appendChild(input);
+      wrapper.appendChild(text);
+      el.answersForm.appendChild(wrapper);
+    });
+
+    el.backButton.disabled = state.currentIndex === 0;
+    el.nextButton.disabled = selected === null;
+    el.nextButton.textContent = state.currentIndex === questions.length - 1 ? "Review" : "Next";
+
+    showView("question");
+  }
+
+  function renderReview() {
+    el.reviewList.innerHTML = "";
+
+    state.data.questions.forEach((question, idx) => {
+      const item = document.createElement("li");
+      item.className = "review-item";
+
+      const q = document.createElement("p");
+      q.className = "review-question";
+      q.textContent = (idx + 1) + ". " + question.text;
+
+      const a = document.createElement("p");
+      a.className = "review-answer";
+      a.textContent = "Answer: " + getLikertLabel(state.answers[idx]);
+
+      const edit = document.createElement("button");
+      edit.type = "button";
+      edit.className = "inline-button";
+      edit.textContent = "Edit this question";
+      edit.addEventListener("click", () => {
+        state.currentIndex = idx;
+        saveProgress();
+        renderQuestion();
+      });
+
+      item.appendChild(q);
+      item.appendChild(a);
+      item.appendChild(edit);
+      el.reviewList.appendChild(item);
+    });
+
+    showView("review");
+  }
+
+  function calculateResults() {
+    const axes = state.data.axes.map((axis) => ({
+      id: axis.id,
+      label: axis.label,
+      highMeans: axis.high_means,
+      lowMeans: axis.low_means,
+      raw: 0,
+      count: 0
+    }));
+
+    const axisIndex = {};
+    axes.forEach((axis, idx) => {
+      axisIndex[axis.id] = idx;
+    });
+
+    state.data.questions.forEach((question, idx) => {
+      const answer = state.answers[idx];
+      if (answer === null) return;
+
+      let n = answer - 1;
+      if (question.reverse) {
+        n = 4 - n;
+      }
+
+      const target = axes[axisIndex[question.axis]];
+      target.raw += n;
+      target.count += 1;
+    });
+
+    return axes.map((axis) => {
+      const max = 4 * axis.count;
+      const percent = max > 0 ? Math.round((axis.raw / max) * 100) : 0;
+      return {
+        label: axis.label,
+        percent: percent,
+        explanation: percent >= 50 ? axis.highMeans : axis.lowMeans
+      };
+    });
+  }
+
+  function renderResults() {
+    const results = calculateResults();
+
+    if (state.chart) {
+      state.chart.destroy();
+    }
+
+    state.chart = new Chart(el.chartCanvas, {
+      type: "radar",
+      data: {
+        labels: results.map((r) => r.label),
+        datasets: [
+          {
+            label: "Axis Score (0-100)",
+            data: results.map((r) => r.percent),
+            backgroundColor: "rgba(15, 118, 110, 0.24)",
+            borderColor: "#0f766e",
+            borderWidth: 2,
+            pointBackgroundColor: "#125a8f",
+            pointRadius: 3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          r: {
+            min: 0,
+            max: 100,
+            ticks: {
+              stepSize: 20
+            }
+          }
+        }
+      }
+    });
+
+    el.resultsBody.innerHTML = "";
+    results.forEach((row) => {
+      const tr = document.createElement("tr");
+
+      const tdAxis = document.createElement("td");
+      tdAxis.textContent = row.label;
+
+      const tdScore = document.createElement("td");
+      tdScore.textContent = row.percent + "%";
+
+      const tdExp = document.createElement("td");
+      tdExp.textContent = row.explanation;
+
+      tr.appendChild(tdAxis);
+      tr.appendChild(tdScore);
+      tr.appendChild(tdExp);
+      el.resultsBody.appendChild(tr);
+    });
+
+    el.copyJsonButton.onclick = () => {
+      const output = {};
+      results.forEach((row) => {
+        output[row.label] = row.percent;
+      });
+      const jsonText = JSON.stringify(output, null, 2);
+      navigator.clipboard.writeText(jsonText)
+        .then(() => {
+          el.resultsFeedback.textContent = "Results JSON copied to clipboard.";
+        })
+        .catch(() => {
+          el.resultsFeedback.textContent = "Clipboard copy failed.";
+        });
+    };
+
+    el.downloadJsonButton.onclick = () => {
+      const output = {};
+      results.forEach((row) => {
+        output[row.label] = row.percent;
+      });
+      const blob = new Blob([JSON.stringify(output, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "political-self-insight-results.json";
+      link.click();
+      URL.revokeObjectURL(url);
+      el.resultsFeedback.textContent = "Results JSON downloaded.";
+    };
+
+    showView("results");
+  }
+
+  function startQuiz() {
+    state.currentIndex = firstUnansweredIndex();
+    saveProgress();
+    renderQuestion();
+  }
+
+  function wireEvents() {
+    el.retryButton.addEventListener("click", init);
+
+    el.startButton.addEventListener("click", () => {
+      if (!state.answers.some((v) => v !== null)) {
+        clearProgress();
+      }
+      startQuiz();
+    });
+
+    el.resumeButton.addEventListener("click", startQuiz);
+
+    el.startOverButton.addEventListener("click", () => {
+      if (confirm("Clear all answers and restart the quiz?")) {
+        clearProgress();
+        showStartView();
+      }
+    });
+
+    el.backButton.addEventListener("click", () => {
+      if (state.currentIndex > 0) {
+        state.currentIndex -= 1;
+        saveProgress();
+        renderQuestion();
+      }
+    });
+
+    el.nextButton.addEventListener("click", () => {
+      if (state.answers[state.currentIndex] === null) {
+        return;
+      }
+
+      if (state.currentIndex === state.data.questions.length - 1) {
+        renderReview();
+        return;
+      }
+
+      state.currentIndex += 1;
+      saveProgress();
+      renderQuestion();
+    });
+
+    el.reviewBackButton.addEventListener("click", () => {
+      state.currentIndex = firstUnansweredIndex();
+      renderQuestion();
+    });
+
+    el.showResultsButton.addEventListener("click", () => {
+      const missing = firstUnansweredIndex();
+      if (state.answers.includes(null)) {
+        state.currentIndex = missing;
+        renderQuestion();
+        return;
+      }
+      renderResults();
+    });
+
+    el.retakeButton.addEventListener("click", () => {
+      clearProgress();
+      showStartView();
+    });
+  }
+
+  function showStartView() {
+    const hasProgress = state.answers.some((v) => v !== null);
+    el.resumeButton.classList.toggle("hidden", !hasProgress);
+    showView("start");
+  }
+
+  async function init() {
+    try {
+      const res = await fetch(DATA_FILE, { cache: "no-store" });
+      if (!res.ok) {
+        throw new Error("HTTP " + res.status + " while fetching quiz data.");
+      }
+
+      state.data = await res.json();
+      state.answers = new Array(state.data.questions.length).fill(null);
+      state.currentIndex = 0;
+      loadProgress();
+      showStartView();
+    } catch (err) {
+      el.errorMessage.textContent = "Could not load '" + DATA_FILE + "'. " + err.message;
+      showView("error");
+    }
+  }
+
+  wireEvents();
+  init();
+})();
